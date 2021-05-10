@@ -21,28 +21,29 @@ class CreateTransactionService {
     category,
   }: RequestDTO): Promise<Transaction> {
     const transactionsRepository = getCustomRepository(TransactionsRepository); // custom methods of repository [ getBalance() ]
-    const categoriesRepository = getRepository(Category); // native methods
+    const categoryRepository = getRepository(Category); // repository based on model
 
     const { total } = await transactionsRepository.getBalance();
     const result = total - value;
+
     if (type === 'outcome' && result < 0) {
       throw new AppError(
         'You cannot create a outcome transaction without a valid balance.',
       );
     }
 
-    let transactionCategory = await categoriesRepository.findOne({
+    let transactionCategory = await categoryRepository.findOne({
       where: {
         title: category,
       },
     });
 
     if (!transactionCategory) {
-      transactionCategory = categoriesRepository.create({
+      transactionCategory = categoryRepository.create({
         title: category,
       });
 
-      await categoriesRepository.save(transactionCategory);
+      await categoryRepository.save(transactionCategory);
     }
 
     const transaction = transactionsRepository.create({
